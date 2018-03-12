@@ -1,11 +1,12 @@
 #include "src/set1.h"
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "gtest/gtest.h"
 
 #include "src/crypto.h"
-#include "src/file_util.h"
+#include "src/util.h"
 
 TEST(Set1, HexToBase64) {
   std::string hex =
@@ -126,4 +127,37 @@ TEST(set1, DISABLED_DecodeAes128Ecb) {
       DecryptAes128Ecb(data, ToBytes("YELLOW SUBMARINE"), &decrypted_data));
 
   FAIL() << std::string(decrypted_data.begin(), decrypted_data.end());
+}
+
+TEST(Set1, DISABLED_DetectAes128Ecb) {
+  auto lines = Split(ReadFileToString("data/8.txt"), '\n', SkipEmpty());
+
+  size_t index_of_max_frequency = -1;
+  int max_frequency = -1;
+
+  for (size_t i = 0; i < lines.size(); ++i) {
+    const std::string& line = lines[i];
+    // 32 symbols = (2 hex symbols per byte) * (16 bytes per AES128 block)
+    ASSERT_TRUE(line.size() % 32 == 0);
+
+    std::unordered_map<std::string, int> frequences;
+    for (size_t i = 0; i < lines.size(); i += 32) {
+      frequences[line.substr(i, 32)] += 1;
+    }
+
+    auto it = std::max_element(frequences.begin(), frequences.end(),
+                               [](const auto& left, const auto& right) {
+                                 return left.second < right.second;
+                               });
+
+    if (max_frequency < it->second) {
+      max_frequency = it->second;
+      index_of_max_frequency = i;
+    }
+  }
+
+  FAIL() << "Line number " + std::to_string(index_of_max_frequency) +
+                " with frequency of a block equal " +
+                std::to_string(max_frequency) + ": " +
+                lines[index_of_max_frequency];
 }

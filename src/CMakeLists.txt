@@ -1,13 +1,13 @@
 set(SRC_HXX
   crypto.h
-  file_util.h
   set1.h
+  util.h
 )
 
 set(SRC_CXX
   crypto.cpp
-  file_util.cpp
   set1.cpp
+  util.cpp
 )
 
 set(SRC_TESTS
